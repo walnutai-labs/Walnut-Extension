@@ -1,6 +1,23 @@
 # Changelog
 
-All notable changes to the Walnut AI extension will be documented in this file.
+All notable changes to the Walnut AI CLI (`walnutai`) and the cloud agent that runs it.
+
+> Earlier entries (4.2.x and below) cover the Walnut AI VS Code extension. The extension now ships separately to the marketplace; this changelog has pivoted to track the CLI/cloud-agent release.
+
+## [4.3.15] - 2026-04-28
+
+Cloud-agent reliability release.
+
+### Fixed
+- **Long file writes no longer truncate silently.** The CLI was hardcoded to `maxTokens: 8192` regardless of model, then exited cleanly when the model hit that ceiling. Long READMEs, BRDs, and test plans came out half-written. Now uses the model's actual max output (Sonnet 4.6 → 64K, Opus 4.6 → 128K) and auto-continues up to 3 times if the model still hits the ceiling.
+- **"No AI provider configured" now self-diagnoses.** When the cloud agent bails because it can't find an LLM, it now prints exactly what failed: was the project fetched? Did it have LLM models? What HTTP error came back? Which env vars are set? No more SSHing into the VM twice to figure out why.
+- **Managed/credit-plan projects now work in the CLI.** The CLI was only reading `settings.ai_models.llm_models` (enterprise BYOM), so projects on Walnut-managed models silently failed with "no AI model". Added a fallback to `/ai-models/effective-config` which is the BYOM-aware endpoint.
+- **AWS Bedrock SSL transient errors recover automatically.** Random `SSL alert number 20` / `BAD_RECORD_MAC` / `ECONNRESET` / `socket hang up` errors now trigger a one-shot reconnect + retry instead of dying.
+
+### Improved
+- **1-hour prompt cache TTL** is now latched on cloud-agent startup. Long-running tasks reuse cached system prompt + tools across all turns.
+
+---
 
 ## [4.2.20] - 2026-01-30
 
